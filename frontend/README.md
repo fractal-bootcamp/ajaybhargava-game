@@ -1,100 +1,60 @@
-# Welcome to React Router!
+# Tic Tac Toe Game 
 
-A modern, production-ready template for building full-stack React applications using React Router.
+## Application Logic
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+```typescript
 
-## Features
+// Game Logic
+function CheckWin(board: Board): GameConclusions {
+	const winConditions = [
+		[0, 1, 2],
+		[3, 4, 5],
+		[6, 7, 8],
+		[0, 3, 6],
+		[1, 4, 7],
+		[2, 5, 8],
+		[0, 4, 8],
+		[2, 4, 6],
+	];
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+	for (const condition of winConditions) {
+		const [a, b, c] = condition;
+		if (board[a] === board[b] && board[b] === board[c] && board[a] !== " ") {
+			return { win: board[a], draw: false };
+		}
+	}
 
-## Getting Started
-
-### Installation
-
-Install the dependencies:
-
-```bash
-npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
-npm run dev
-```
-
-Your application will be available at `http://localhost:5173`.
-
-## Building for Production
-
-Create a production build:
-
-```bash
-npm run build
-```
-
-## Deployment
-
-### Docker Deployment
-
-This template includes three Dockerfiles optimized for different package managers:
-
-- `Dockerfile` - for npm
-- `Dockerfile.pnpm` - for pnpm
-- `Dockerfile.bun` - for bun
-
-To build and run using Docker:
-
-```bash
-# For npm
-docker build -t my-app .
-
-# For pnpm
-docker build -f Dockerfile.pnpm -t my-app .
-
-# For bun
-docker build -f Dockerfile.bun -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
+	// Check for draw - if no empty spaces left
+	const isDraw = !board.includes(" ");
+	return { win: null, draw: isDraw };
+}
 
 ```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+
+Checks if there's a winner or a draw. An example of the logic iterated with an example of the board:
+
+```typescript
+const board = ["X", "O", "X", "O", "X", "O", "O", "X", "O"];
+const result = CheckWin(board);
 ```
 
-## Styling
+The result will be:
 
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
+```typescript
+{ win: "X", draw: false }
+```
 
----
+Why?
 
-Built with ❤️ using React Router.
+The board is an array of 9 elements, each element can be "X", "O" or " ". The function iterates through the win conditions and checks if any of them are met. If a win condition is met, the function returns the winner. If no win condition is met, the function returns a draw.
+
+
+### Reporting Logic
+
+```typescript
+CheckWin(game.board).win
+    ? `Winner: ${CheckWin(game.board).win}`    // if there's a winner
+    : CheckWin(game.board).draw                // else, check if it's a draw
+        ? "Game is a draw!"                    // if it's a draw
+        : "No winner yet"                      // if neither win nor draw
+```
