@@ -9,7 +9,7 @@ interface CardImageProps {
 export function CardImage({
 	card,
 	alt,
-	className = "w-24 h-auto",
+	className = "w-36 h-auto",
 }: CardImageProps) {
 	const imagePath = `../assets/${card}.svg`;
 	const imageModule = cardImages[imagePath] as { default: string };
