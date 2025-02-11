@@ -34,9 +34,9 @@ export function CardGrid({ gameState, onCardClick }: CardGridProps) {
 							}`}
 						>
 							{isSelected || isMatched ? (
-								<CardImage card={card} className="w-36 h-52" />
+								<CardImage card={card} className="w-24 h-32" />
 							) : (
-								<div className="w-36 h-52 bg-blue-500 rounded" />
+								<div className="w-24 h-32 bg-blue-500 rounded" />
 							)}
 						</div>
 					);
