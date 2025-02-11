@@ -1,22 +1,64 @@
 import { useState, useEffect } from "react";
 import { CardImage } from "@components/CardImage";
-import type { Card, GameState } from "../../types/game";
-import { initializeGame, handleMatch } from "../../utils/gameUtils";
+import { isMatch, type Position } from "../../types/types";
+import { initializeGame } from "../../utils/utilities";
+import type { GameState } from "../../types/types";
+
+const initialPlayers = [
+	{ name: "Ajay", score: 0 },
+	{ name: "Koyal", score: 0 },
+];
+const defaultSize = 5;
+const initialGame = initializeGame(defaultSize, initialPlayers);
+
+function selectCard(position: Position, game: GameState): GameState {
+	// Don't allow selecting the same card twice
+	if (
+		game.selections.some(
+			(selected) => selected[0] === position[0] && selected[1] === position[1],
+		)
+	) {
+		return game;
+	}
+	if (game.selections.length === 2) return game;
+	return { ...game, selections: [...game.selections, position] };
+}
+
+function scoreMatch(gameState: GameState): GameState {
+	const prevState = structuredClone(gameState);
+	const players = prevState.players;
+	players[prevState.currentPlayer].score += 1;
+	return {
+		...prevState,
+		selections: [],
+		matchedCards: [...prevState.matchedCards, ...prevState.selections],
+		players,
+		currentPlayer: (prevState.currentPlayer + 1) % players.length,
+	};
+}
+
+function isGameOver(gameState: GameState): boolean {
+	return (
+		gameState.matchedCards.length ===
+		gameState.board.grid.length * gameState.board.grid[0].length
+	);
+}
 
 export default function Play() {
-	const [gameState, setGameState] = useState<GameState>(() =>
-		initializeGame(5, [
-			{ name: "Ajay", score: 0 },
-			{ name: "Koyal", score: 0 },
-		]),
-	);
+	const [gameState, setGameState] = useState<GameState>(initialGame);
+	const columns = gameState.board.grid.length;
 
+	// animation loop to check for matches and flip down cards:
 	useEffect(() => {
-		if (gameState.selectedCards.length === 2) {
-			const cardsMatch =
-				gameState.selectedCards[0].card[0] ===
-				gameState.selectedCards[1].card[0];
+		if (gameState.selections.length !== 2) {
+			return;
+		}
 
+		if (isMatch(gameState)) {
+			setGameState(scoreMatch(gameState));
+		}
+
+		if (gameState.selections.length === 2) {
 			// Always clear selected cards after a delay
 			const timer = setTimeout(() => {
 				setGameState((prevState) => ({
@@ -27,24 +69,19 @@ export default function Play() {
 
 			return () => clearTimeout(timer);
 		}
-	}, [gameState.selectedCards]);
+	}, [gameState]);
 
-	const handleCardClick = (card: Card, position: [number, number]) => {
-		setGameState((prevState) => {
-			// Add card to selected cards
-			const newState = {
-				...prevState,
-				selectedCards: [...prevState.selectedCards, { card, position }],
-			};
-
-			// If we have 2 cards selected, handle the match
-			if (newState.selectedCards.length === 2) {
-				return handleMatch(newState);
-			}
-
-			return newState;
-		});
-	};
+	function handleCardClick(position: Position) {
+		// Don't allow clicking already matched cards
+		if (
+			gameState.matchedCards.some(
+				(match) => match[0] === position[0] && match[1] === position[1],
+			)
+		) {
+			return;
+		}
+		setGameState((prevState) => selectCard(position, prevState));
+	}
 
 	return (
 		<div className="flex flex-col items-center gap-4 p-4">
@@ -64,32 +101,31 @@ export default function Play() {
 			<div
 				className="grid gap-4"
 				style={{
-					gridTemplateColumns: `repeat(${gameState.grid.size}, minmax(0, 1fr))`,
+					gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
 				}}
 			>
-				{gameState.grid.grid.map((row, rowIndex) =>
+				{gameState.board.grid.map((row, rowIndex) =>
 					row.map((card, colIndex) => {
-						const isMatched = gameState.matchedCards.some(
-							(match) => match.card === card,
-						);
-						const isSelected = gameState.selectedCards.some(
-							(selected) =>
-								selected.position[0] === rowIndex &&
-								selected.position[1] === colIndex,
-						);
 						return (
 							// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 							<div
 								key={card}
-								onClick={() => handleCardClick(card, [rowIndex, colIndex])}
+								onClick={() => handleCardClick([rowIndex, colIndex])}
 								className={`cursor-pointer transition-transform ${
-									isSelected ? "scale-95" : ""
+									gameState.selections.some(
+										(selected) =>
+											selected[0] === rowIndex && selected[1] === colIndex,
+									)
+										? "scale-95"
+										: ""
 								}`}
 							>
-								{isSelected || isMatched ? (
-									<CardImage card={card} className="w-36 h-52" />
+								{gameState.matchedCards.some(
+									(match) => match[0] === rowIndex && match[1] === colIndex,
+								) ? (
+									<CardImage card={card} className="w-24 h-32" />
 								) : (
-									<div className="w-36 h-52 bg-blue-500 rounded" />
+									<div className="w-24 h-32 bg-blue-500 rounded" />
 								)}
 							</div>
 						);
