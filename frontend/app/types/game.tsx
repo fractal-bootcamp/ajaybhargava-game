@@ -5,10 +5,15 @@ export type Grid = 3 | 4 | 5;
 export type Suit = "C" | "D" | "H" | "S";
 
 // Card Value
-export type Value = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | "J" | "Q" | "K" | "A";
+export type NumericValue = 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export type FaceValue = "J" | "Q" | "K" | "A";
+export type Value = NumericValue | FaceValue;
 
 // Card
 export type Card = `${Value}${Suit}`;
+
+// Position in the grid
+export type GridPosition = [number, number];
 
 // Players
 export type Player = {
@@ -16,29 +21,24 @@ export type Player = {
 	score: number;
 };
 
-// Initial Grid
-export type InitialGrid = {
+// Grid State
+export type GridState = {
 	size: Grid;
 	grid: Card[][];
 	cards: Card[];
 };
 
-// Selected Cards
-export type SelectedCards = {
+// Card State
+export type CardState = {
 	card: Card;
-	position: [number, number];
-};
-
-// Matched Cards
-export type MatchedCards = {
-	card: Card;
+	position: GridPosition;
 };
 
 // Game State
 export type GameState = {
-	grid: InitialGrid;
-	selectedCards: SelectedCards[];
-	matchedCards: MatchedCards[];
+	grid: GridState;
+	selectedCards: CardState[];
+	matchedCards: CardState[];
 	players: Player[];
 	currentPlayer: number;
-}; 
+};
