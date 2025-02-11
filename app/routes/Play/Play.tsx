@@ -12,8 +12,6 @@ export default function Play() {
 		]),
 	);
 
-	console.log(gameState.grid.grid);
-
 	useCardResetTimer(gameState, setGameState);
 
 	const handleCardClick = (card: Card, position: [number, number]) => {
