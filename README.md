@@ -12,3 +12,6 @@ You pick two cards and try to see if they match. If they match, your turn persis
 
 Any two cards of the same number are considered a match. 
 
+## Game Design
+
+The game is designed to played on varying grid sizes. These can be configured in the game options at start. I'm thinking of supporting 3x3, 4x4, 5x5, and 6x6 grids. 
