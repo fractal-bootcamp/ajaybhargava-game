@@ -1,7 +1,7 @@
 import TwoClubs from "@/assets/2C.svg";
 import type { Route } from "./+types/Home";
 import { useLoaderData } from "react-router";
-import { CardImage } from "~/components/CardImage";
+import { CardImage }  from "@components/CardImage";
 export async function loader() {
 	return {
 		message: "Hello, world!",
