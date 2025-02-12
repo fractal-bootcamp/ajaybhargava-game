@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 const PORT = process.env.PORT || 3001;
 
 // Server Deployable Game State
-let gameState: GameState = initializeGame(5, [
+const gameState: GameState = initializeGame(5, [
     {
         name: 'Player 1',
         score: 0,
@@ -28,10 +28,14 @@ const GameLobby: Lobby = {
 
 // Initialize Express Server
 const app = express();
-// Initial Server
+// Non Socket Server
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.get('/', (req, res) => { 
     res.send("Hello World.")
+})
+app.get('/rooms', (req, res) => {
+    const rooms = Array.from(GameLobby.rooms.values());
+    res.json(rooms);
 })
 const HttpServer = createServer(app);
 
@@ -44,15 +48,22 @@ const io = new Server(HttpServer, {
 })
 
 // Add reset timer function on server
-function resetSelectedCards() {
-    gameState = {
-        ...gameState,
-        selectedCards: []
-    };
-    io.emit('gameUpdate', gameState);
+function resetSelectedCards(roomId: string) {
+    const room = GameLobby.rooms.get(roomId);
+    if (room) {
+        room.gameState = {
+            ...gameState,
+            selectedCards: []
+        };
+        io.to(roomId).emit('gameUpdate', room.gameState);
+    }
+    else {
+        console.log("Room not found");
+    }
 }
 
 io.on('connection', (socket) => {
+
     // New GameRoom with UUID
     socket.on('newGame', (newGame, Size) => {
         const identifier = uuidv4()
@@ -104,17 +115,28 @@ io.on('connection', (socket) => {
             room.status = "ready"
             socket.emit(`Game Room with ${roomId} is ${room.status} to play.`)
             room.gameState = initializeGame(room.gamesize, playerNames)
+            socket.join(roomId)
         }
     });
+    // Lobby Style Game Handling
     // Game Handling
     socket.emit('gameUpdate', gameState);
-    socket.on('playerMove', (card: Card, position: GridPosition) => {
-        gameState = handleCardSelection(gameState, card, position);
-        io.emit('gameUpdate', gameState);
+    socket.on('playerMove', (roomId: string, card: Card, position: GridPosition) => {
+        const room = GameLobby.rooms.get(roomId);
+        
+        if (!room || !room.gameState) {
+            socket.emit('error', 'Room not found nor game is initialized');
+            return;
+        }
+
+        // Update the game state for the specific room
+        room.gameState = handleCardSelection(room.gameState, card, position);
+        io.to(roomId).emit('gameUpdate', room.gameState);
+
         // If two cards are selected, start the reset timer
-        if (gameState.selectedCards.length === 2) {
+        if (room.gameState.selectedCards.length === 2) {
             setTimeout(() => {
-                resetSelectedCards();
+                resetSelectedCards(roomId);
             }, 500);
         }
     });
