@@ -7,8 +7,8 @@ import { CardGrid } from "../../components/CardGrid";
 export default function Play() {
 	const [gameState, setGameState] = useState(() =>
 		initializeGame(5, [
-			{ name: "Ajay", score: 0 },
-			{ name: "Koyal", score: 0 },
+			{ name: "P1", score: 0 },
+			{ name: "P2", score: 0 },
 		]),
 	);
 

@@ -17,7 +17,8 @@
     "paths": {
       "~/*": ["./app/*"],
       "@components/*": ["./app/components/*"],
-      "@/assets/*": ["./app/assets/*"]
+      "@/assets/*": ["./app/assets/*"],
+      "@custom_types/*": ["./app/server/types/*"]
     },
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
