@@ -2,9 +2,7 @@ import express  from 'express';
 import { Server } from 'socket.io';
 import { createServer } from 'node:http';
 import cors from 'cors';
-import { v4 as uuidv4 } from 'uuid';
-import type { GameState, Card, GridPosition, Player } from '../types/game';
-import type { ServerGame, MovePayload, CreateGamePayload } from '../types/server';
+import type { GameState, Card, GridPosition } from '../types/game';
 import { handleCardSelection, initializeGame } from '~/utils/gameUtils';
 
 
@@ -12,7 +10,7 @@ import { handleCardSelection, initializeGame } from '~/utils/gameUtils';
 const PORT = process.env.PORT || 3001;
 
 // Server Deployable Game State
-const InitialGameState: GameState = initializeGame(5, [
+let gameState: GameState = initializeGame(5, [
     {
         name: 'Player 1',
         score: 0,
@@ -40,39 +38,30 @@ const io = new Server(HttpServer, {
     },
 })
 
-io.on('connection', (socket) => {
-    // Create a new initialized game state for each new connection
-    const newGameState = initializeGame(5, [
-        {
-            name: 'Player 1',
-            score: 0,
-        },
-        {
-            name: 'Player 2',
-            score: 0,
-        },
-    ]);
-    socket.emit('gameUpdate', newGameState)
-    
-    socket.on('playerMove', (card: Card, position: GridPosition) => {
-        // Use the current game state instead of InitialGameState
-        const gameUpdate = handleCardSelection(newGameState, card, position)
-        io.emit('gameUpdate', gameUpdate)
-    })
+// Add reset timer function on server
+function resetSelectedCards() {
+    gameState = {
+        ...gameState,
+        selectedCards: []
+    };
+    io.emit('gameUpdate', gameState);
+}
 
-    socket.on('newGame', () => {
-        const game = initializeGame(5, [
-            {
-                name: 'Player 1',
-                score: 0,
-            },
-            {
-                name: 'Player 2',
-                score: 0,
-            },
-        ]);
-        io.emit('gameUpdate', game);
-    })
+io.on('connection', (socket) => {    
+    socket.emit('gameUpdate', gameState);
+
+    socket.on('playerMove', (card: Card, position: GridPosition) => {
+        gameState = handleCardSelection(gameState, card, position);
+        io.emit('gameUpdate', gameState);
+        // If two cards are selected, start the reset timer
+        if (gameState.selectedCards.length === 2) {
+            console.log('here.')
+            setTimeout(() => {
+                resetSelectedCards();
+            }, 500);
+        }
+
+    });
 
     socket.on('disconnect', () => {
         console.log("Player Disconnected", socket.id);

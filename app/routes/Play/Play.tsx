@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Card, GridPosition } from "../../types/game";
-import { initializeGame, handleCardSelection } from "../../utils/gameUtils";
-import { useCardResetTimer } from "../../hooks/useCardResetTimer";
+import { initializeGame } from "../../utils/gameUtils";
 import { CardGrid } from "../../components/CardGrid";
 import { io } from "socket.io-client";
 
@@ -18,27 +17,12 @@ export default function Play() {
 	// Side Effect to Receive Game State
 	useEffect(() => {
 		socket.on("gameUpdate", (serverState) => {
-			setGameState(
-				initializeGame(5, [
-					{ name: "P1", score: 0 },
-					{ name: "P2", score: 0 },
-				]),
-			);
 			setGameState(serverState);
 		});
-		return () => {
-			socket.off("gameUpdate");
-		};
 	}, []);
-
-	// Action that resets the SelectedCards
-	useCardResetTimer(gameState, setGameState);
 
 	// Action that handles the CardClick
 	const handleCardClick = (card: Card, position: GridPosition) => {
-		// Local Mode
-		// setGameState((prevState) => handleCardSelection(prevState, card, position));
-		// Server Mode
 		socket.emit("playerMove", card, position);
 	};
 
