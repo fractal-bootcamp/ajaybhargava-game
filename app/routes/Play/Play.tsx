@@ -14,16 +14,26 @@ export default function Play() {
 		]),
 	);
 
+	socket.emit("newGame", true, 5);
+	const [roomId, setRoomId] = useState<string | null>(null);
+	socket.on("newGameCreated", (identifier: string) => {
+		setRoomId(identifier);
+	});
+	console.log(roomId);
+	socket.emit("gamePlayer", roomId, "P1");
+	socket.emit("gamePlayer", roomId, "P2");
+	console.log(roomId);
+
 	// Side Effect to Receive Game State
 	useEffect(() => {
-		socket.on("gameUpdate", (serverState) => {
+		socket.on("gameUpdate", (roomId: string, serverState) => {
 			setGameState(serverState);
 		});
 	}, []);
 
 	// Action That Handles the CardClick
 	const handleCardClick = (card: Card, position: GridPosition) => {
-		socket.emit("playerMove", card, position);
+		socket.emit("playerMove", roomId, card, position);
 	};
 
 	return (

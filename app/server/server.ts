@@ -65,7 +65,7 @@ function resetSelectedCards(roomId: string) {
 io.on('connection', (socket) => {
 
     // New GameRoom with UUID
-    socket.on('newGame', (newGame, Size) => {
+    socket.on('newGame', (newGame: boolean, Size: number) => {
         const identifier = uuidv4()
         const matchGame: GameRoom = {
             roomId: identifier,
@@ -73,7 +73,7 @@ io.on('connection', (socket) => {
             gameState: null,
             status: 'waiting',
             maxPlayers: 2,
-            gamesize: Size,
+            gamesize: Size as 3 | 4 | 5,
         }
         if (newGame) {
             GameLobby.rooms.set(
@@ -120,9 +120,10 @@ io.on('connection', (socket) => {
     });
     // Lobby Style Game Handling
     // Game Handling
-    socket.emit('gameUpdate', gameState);
+    socket.emit('gameUpdate', gameState); 
     socket.on('playerMove', (roomId: string, card: Card, position: GridPosition) => {
         const room = GameLobby.rooms.get(roomId);
+        console.log(room);
         
         if (!room || !room.gameState) {
             socket.emit('error', 'Room not found nor game is initialized');
