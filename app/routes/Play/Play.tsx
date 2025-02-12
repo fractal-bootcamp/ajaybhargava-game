@@ -21,10 +21,12 @@ export default function Play() {
 		});
 	}, []);
 
-	// Action that handles the CardClick
+	// Action That Handles the CardClick
 	const handleCardClick = (card: Card, position: GridPosition) => {
 		socket.emit("playerMove", card, position);
 	};
+
+	console.log(gameState.currentPlayer);
 
 	return (
 		<div className="flex flex-col items-center gap-4 p-4">
@@ -40,6 +42,7 @@ export default function Play() {
 				))}
 			</div>
 
+			{/* Needs modifying when lobby concept is introduced. */}
 			<CardGrid gameState={gameState} onCardClick={handleCardClick} />
 		</div>
 	);

@@ -139,12 +139,3 @@ export function handleCardSelection(
 
 	return newState;
 }
-
-// Add reset timer function on server
-function resetSelectedCards() {
-	gameState = {
-		...gameState,
-		selectedCards: [],
-	};
-	io.emit("gameUpdate", gameState);
-}
