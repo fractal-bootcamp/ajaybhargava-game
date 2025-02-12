@@ -1,12 +1,4 @@
-import type {
-	Card,
-	Grid,
-	Suit,
-	Value,
-	Player,
-	GameState,
-	CardState,
-} from "../types/game";
+import type { Card, Grid, Suit, Value, Player, GameState } from "../types/game";
 
 // Shuffle any type of array
 function shuffleArray<T>(array: T[]): T[] {

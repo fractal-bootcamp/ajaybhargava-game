@@ -1,8 +1,10 @@
-import { useState } from "react";
-import type { Card } from "../../types/game";
-import { initializeGame, handleCardSelection } from "../../utils/gameUtils";
-import { useCardResetTimer } from "../../hooks/useCardResetTimer";
+import { useEffect, useState } from "react";
+import type { Card, GridPosition } from "../../types/game";
+import { initializeGame } from "../../utils/gameUtils";
 import { CardGrid } from "../../components/CardGrid";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:3001");
 
 export default function Play() {
 	const [gameState, setGameState] = useState(() =>
@@ -12,11 +14,19 @@ export default function Play() {
 		]),
 	);
 
-	useCardResetTimer(gameState, setGameState);
+	// Side Effect to Receive Game State
+	useEffect(() => {
+		socket.on("gameUpdate", (serverState) => {
+			setGameState(serverState);
+		});
+	}, []);
 
-	const handleCardClick = (card: Card, position: [number, number]) => {
-		setGameState((prevState) => handleCardSelection(prevState, card, position));
+	// Action That Handles the CardClick
+	const handleCardClick = (card: Card, position: GridPosition) => {
+		socket.emit("playerMove", card, position);
 	};
+
+	console.log(gameState.currentPlayer);
 
 	return (
 		<div className="flex flex-col items-center gap-4 p-4">
@@ -32,6 +42,7 @@ export default function Play() {
 				))}
 			</div>
 
+			{/* Needs modifying when lobby concept is introduced. */}
 			<CardGrid gameState={gameState} onCardClick={handleCardClick} />
 		</div>
 	);
