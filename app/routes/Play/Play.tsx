@@ -26,8 +26,6 @@ export default function Play() {
 		socket.emit("playerMove", card, position);
 	};
 
-	console.log(gameState.currentPlayer);
-
 	return (
 		<div className="flex flex-col items-center gap-4 p-4">
 			{/* Player info */}
@@ -35,7 +33,7 @@ export default function Play() {
 				{gameState.players.map((player, index) => (
 					<div
 						key={player.name}
-						className={`text-lg ${index === gameState.currentPlayer ? "font-bold" : ""}`}
+						className={`text-2xl ${index === gameState.currentPlayer ? "font-extrabold" : "font-extralight"}`}
 					>
 						{player.name}: {player.score}
 					</div>
