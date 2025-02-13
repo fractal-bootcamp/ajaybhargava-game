@@ -13,17 +13,68 @@ export default function Play() {
 			{ name: "P2", score: 0 },
 		]),
 	);
+	const [roomId, setRoomId] = useState<string | null>(null);
 
-	// Side Effect to Receive Game State
+	// Setup socket connection and game room
 	useEffect(() => {
-		socket.on("gameUpdate", (serverState) => {
+		console.log("Connecting to socket server...");
+
+		// Create new game room
+		socket.emit("newGame", true, 5);
+		console.log("Emitted newGame event");
+
+		// Listen for room creation
+		const handleNewGame = (identifier: string) => {
+			console.log("Received newGameCreated event:", identifier);
+			setRoomId(identifier);
+
+			// Add players only after room is created
+			console.log("Adding players to room:", identifier);
+			socket.emit("gamePlayer", identifier, "P1");
+			socket.emit("gamePlayer", identifier, "P2");
+		};
+
+		// Listen for game updates
+		const handleGameUpdate = (serverState: typeof gameState) => {
+			console.log("Received game update:", serverState);
 			setGameState(serverState);
+		};
+
+		// Listen for errors
+		const handleError = (error: string) => {
+			console.error("Socket error:", error);
+		};
+
+		// Set up listeners
+		socket.on("newGameCreated", handleNewGame);
+		socket.on("gameUpdate", handleGameUpdate);
+		socket.on("error", handleError);
+
+		// Connection status listeners
+		socket.on("connect", () => {
+			console.log("Connected to socket server");
 		});
-	}, []);
+
+		socket.on("disconnect", () => {
+			console.log("Disconnected from socket server");
+		});
+
+		// Cleanup listeners when component unmounts
+		return () => {
+			socket.off("newGameCreated", handleNewGame);
+			socket.off("gameUpdate", handleGameUpdate);
+			socket.off("error", handleError);
+		};
+	}, []); // Empty dependency array since we only want this to run once
 
 	// Action That Handles the CardClick
 	const handleCardClick = (card: Card, position: GridPosition) => {
-		socket.emit("playerMove", card, position);
+		if (roomId) {
+			console.log("Emitting playerMove:", { roomId, card, position });
+			socket.emit("playerMove", roomId, card, position);
+		} else {
+			console.warn("Card clicked but no room ID available");
+		}
 	};
 
 	return (
