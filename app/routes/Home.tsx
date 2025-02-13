@@ -1,10 +1,12 @@
-import TwoClubs from "@/assets/2C.svg";
 import type { Route } from "./+types/Home";
 import { useLoaderData } from "react-router";
-import { CardImage }  from "@components/CardImage";
+import { CardImage } from "@components/CardImage";
+
 export async function loader() {
+	const response = await fetch("http://localhost:3001/roomIds");
+	const roomIds = await response.json();
 	return {
-		message: "Hello, world!",
+		roomIds,
 	};
 }
 
@@ -18,5 +20,14 @@ export function meta({}: Route.MetaArgs) {
 
 export default function Home({ actionData }: Route.ComponentProps) {
 	const data = useLoaderData<typeof loader>();
-	return <CardImage card="QC" alt="Queen of Clubs" />;
+	return (
+		<div>
+			<h1>Available Rooms:</h1>
+			<ul>
+				{data.roomIds.map((roomId: string) => (
+					<li key={roomId}>{roomId}</li>
+				))}
+			</ul>
+		</div>
+	);
 }

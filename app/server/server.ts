@@ -33,12 +33,11 @@ app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.get('/', (req, res) => { 
     res.send("Hello World.")
 })
-app.get('/rooms', (req, res) => {
-    const rooms = Array.from(GameLobby.rooms.values());
-    res.json(rooms);
+app.get('/roomIds', (req, res) => {
+    const roomIds = Array.from(GameLobby.rooms.keys());
+    res.json(roomIds);
 })
 const HttpServer = createServer(app);
-
 const io = new Server(HttpServer, {
     cors: {
         origin: 'http://localhost:5173',
@@ -63,10 +62,8 @@ function resetSelectedCards(roomId: string) {
 }
 
 io.on('connection', (socket) => {
-
-    // New GameRoom with UUID
     socket.on('newGame', (newGame: boolean, Size: number) => {
-        const identifier = uuidv4()
+        const identifier = uuidv4();
         const matchGame: GameRoom = {
             roomId: identifier,
             players: [],
@@ -76,52 +73,70 @@ io.on('connection', (socket) => {
             gamesize: Size as 3 | 4 | 5,
         }
         if (newGame) {
-            GameLobby.rooms.set(
-                identifier,
-                matchGame,
-            )
-            socket.emit("newGameCreated", identifier)
+            GameLobby.rooms.set(identifier, matchGame);
+            console.log(`Created new game room: ${identifier}`);
+            socket.emit("newGameCreated", identifier);
         }
     });
 
-    // Add GamePlayer to GameRoom. 
-    socket.on('gamePlayer', (roomId: string , playerName: string) => {
-        const room = GameLobby.rooms.get(roomId)
+    socket.on('gamePlayer', (roomId: string, playerName: string) => {
+        console.log(`Player ${playerName} attempting to join room ${roomId}`);
+        const room = GameLobby.rooms.get(roomId);
         
         if (!room) {
-            socket.emit("Error! Room Not Found.")
-        };
+            console.log(`Room ${roomId} not found`);
+            socket.emit("error", "Room not found");
+            return;
+        }
         
-        if (room) { 
-            const newPlayer: Player = {
-                socketId: socket.id,
-                name: playerName,
-                isReady: true,
+        // Check if player name already exists in room
+        if (room.players.some(p => p.name === playerName)) {
+            socket.emit("error", "Player name already taken in this room");
+            return;
+        }
+        
+        // Check if room is full
+        if (room.players.length >= room.maxPlayers) {
+            socket.emit("error", "Room is full");
+            return;
+        }
+
+        const newPlayer: Player = {
+            socketId: socket.id,
+            name: playerName,
+            isReady: true,
                 spectator: room ? room.players.length >= room.maxPlayers : false
             }
             room.players.push(newPlayer);
-        }
+        socket.join(roomId);
+        
+        console.log(`Added player ${playerName} to room ${roomId}. Current players: ${room.players.length}`);
 
-        if (room && room.players.length <= room.maxPlayers) {
-            room.status = "waiting"
-            socket.emit(`Game Room with ${roomId} is ${room.status} for more players.`)
-        }
-
-        if (room && room.players.length >= room.maxPlayers) {
+        // Update room status
+        if (room.players.length === room.maxPlayers) {
+            console.log(`Room ${roomId} is full and ready to start`);
             const playerNames = room.players.map(player => ({
                 name: player.name,
                 score: 0
             }));
-            room.status = "ready"
-            socket.emit(`Game Room with ${roomId} is ${room.status} to play.`)
-            room.gameState = initializeGame(room.gamesize, playerNames)
-            socket.join(roomId)
+            room.status = "ready";
+            room.gameState = initializeGame(room.gamesize, playerNames);
+            io.to(roomId).emit('gameUpdate', room.gameState);
+        } else {
+            room.status = "waiting";
         }
+        
+        // Emit room status to all clients
+        io.to(roomId).emit('roomStatus', {
+            status: room.status,
+            players: room.players.map(p => p.name)
+        });
     });
     // Lobby Style Game Handling
     // Game Handling
     socket.emit('gameUpdate', gameState); 
     socket.on('playerMove', (roomId: string, card: Card, position: GridPosition) => {
+        console.log(`Player move in room ${roomId}:`, { card, position });
         const room = GameLobby.rooms.get(roomId);
         console.log(room);
         
