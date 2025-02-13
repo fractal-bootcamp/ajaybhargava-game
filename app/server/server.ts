@@ -9,6 +9,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Deployment Port
 const PORT = process.env.PORT || 3001;
+const ORIGINS = ['http://localhost:5173',
+    ...(process.env.RENDER_EXTERNAL_URL ? [process.env.RENDER_EXTERNAL_URL] : []),
+    ...(process.env.NETLIFY_DOMAIN ? [process.env.NETLIFY_DOMAIN] : [])]
 
 // Server Deployable Game State
 const gameState: GameState = initializeGame(5, [
@@ -29,14 +32,17 @@ const GameLobby: Lobby = {
 // Initialize Express Server
 const app = express();
 // Non Socket Server
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({ 
+    origin: ORIGINS, 
+    credentials: true 
+}));
 app.get('/', (req, res) => { 
     res.send("Hello World.")
 })
 const HttpServer = createServer(app);
 const io = new Server(HttpServer, {
     cors: {
-        origin: 'http://localhost:5173',
+        origin: ORIGINS,
         methods: ['GET', 'POST'],
         credentials: true, 
     },
@@ -178,5 +184,5 @@ io.on('connection', (socket) => {
 })
 
 HttpServer.listen(PORT, () => {
-    console.log(`🚀 Backend is listening on http://localhost:${PORT}`)
+    console.log(`🚀 Backend is listening on {http://localhost:${PORT}}`)
 })
