@@ -6,7 +6,7 @@ import { CardGrid } from "../../components/CardGrid";
 import { io } from "socket.io-client";
 import { useLoaderData } from "react-router";
 
-const socket = io("http://localhost:3001");
+const socket = io(`${process.env.VITE_RENDER_PUBLIC_URL}`);
 
 export async function loader({ params }: Route.LoaderArgs) {
 	const identifier = params.roomId;
