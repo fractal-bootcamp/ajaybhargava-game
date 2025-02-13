@@ -33,10 +33,6 @@ app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.get('/', (req, res) => { 
     res.send("Hello World.")
 })
-app.get('/roomIds', (req, res) => {
-    const roomIds = Array.from(GameLobby.rooms.keys());
-    res.json(roomIds);
-})
 const HttpServer = createServer(app);
 const io = new Server(HttpServer, {
     cors: {
@@ -62,6 +58,23 @@ function resetSelectedCards(roomId: string) {
 }
 
 io.on('connection', (socket) => {
+    socket.on('getRooms', () => {
+        const roomStatuses: Record<string, Omit<GameRoom, 'gameState'>> = {};
+        for (const [id, room] of GameLobby.rooms) {
+            roomStatuses[id] = {
+                roomId: room.roomId,
+                players: room.players,
+                status: room.status,
+                maxPlayers: room.maxPlayers,
+                gamesize: room.gamesize
+            };
+        }
+        
+        socket.emit('roomList', 
+            Array.from(GameLobby.rooms.keys()),
+            roomStatuses
+        );
+    });
     socket.on('newGame', (newGame: boolean, Size: number) => {
         const identifier = uuidv4();
         const matchGame: GameRoom = {
@@ -126,14 +139,15 @@ io.on('connection', (socket) => {
             room.status = "waiting";
         }
         
-        // Emit room status to all clients
-        io.to(roomId).emit('roomStatus', {
+        // Emit room status to all players in the room. 
+        io.to(roomId).emit('roomUpdate', roomId, {
+            roomId,
+            players: room.players,
             status: room.status,
-            players: room.players.map(p => p.name)
+            maxPlayers: room.maxPlayers,
+            gamesize: room.gamesize
         });
     });
-    // Lobby Style Game Handling
-    // Game Handling
     socket.emit('gameUpdate', gameState); 
     socket.on('playerMove', (roomId: string, card: Card, position: GridPosition) => {
         console.log(`Player move in room ${roomId}:`, { card, position });

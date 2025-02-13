@@ -9,9 +9,11 @@ type CardGridProps = {
 export function CardGrid({ gameState, onCardClick }: CardGridProps) {
 	return (
 		<div
-			className="grid gap-4"
+			className="grid gap-2"
 			style={{
 				gridTemplateColumns: `repeat(${gameState.grid.size}, minmax(0, 1fr))`,
+				margin: "0 auto",
+				maxWidth: "90%",
 			}}
 		>
 			{gameState.grid.grid.map((row, rowIndex) =>
@@ -31,12 +33,12 @@ export function CardGrid({ gameState, onCardClick }: CardGridProps) {
 							onClick={() => onCardClick(card, [rowIndex, colIndex])}
 							className={`cursor-pointer transition-transform ${
 								isSelected ? "scale-95" : ""
-							}`}
+							} w-18 h-24 `}
 						>
 							{isSelected || isMatched ? (
-								<CardImage card={card} className="w-24 h-32" />
+								<CardImage card={card} className="w-full h-full" />
 							) : (
-								<div className="w-24 h-32 bg-blue-500 rounded" />
+								<div className="w-full h-full bg-blue-500 rounded" />
 							)}
 						</div>
 					);
