@@ -18,13 +18,15 @@
       "~/*": ["./app/*"],
       "@components/*": ["./app/components/*"],
       "@/assets/*": ["./app/assets/*"],
-      "@custom_types/*": ["./app/server/types/*"]
+      "@custom_types/*": ["./app/server/types/*"],
+      "@types/*": ["./app/types/*"]
     },
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
     "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
+    
   }
 }
